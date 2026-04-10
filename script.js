@@ -43,36 +43,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   revealElements.forEach(el => revealObserver.observe(el));
 
-  // --- Counter Animation ---
-  const counters = document.querySelectorAll('[data-count]');
-  const counterObserver = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        animateCounter(entry.target);
-        counterObserver.unobserve(entry.target);
-      }
-    });
-  }, { threshold: 0.5 });
-
-  counters.forEach(el => counterObserver.observe(el));
-
-  function animateCounter(el) {
-    const target = parseInt(el.dataset.count);
-    const suffix = el.dataset.suffix || '+';
-    const duration = 1500;
-    const start = performance.now();
-
-    function update(now) {
-      const elapsed = now - start;
-      const progress = Math.min(elapsed / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
-      const current = Math.round(eased * target);
-      el.textContent = current + (progress >= 1 ? suffix : '');
-      if (progress < 1) requestAnimationFrame(update);
-    }
-    requestAnimationFrame(update);
-  }
-
   // --- FAQ Accordion ---
   const faqItems = document.querySelectorAll('.faq__item');
   faqItems.forEach(item => {
@@ -104,13 +74,48 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const name = form.querySelector('#name').value.trim();
       const phone = form.querySelector('#phone').value.trim();
-      const message = form.querySelector('#message').value.trim();
+      const business = form.querySelector('#business')?.value.trim() || '';
 
-      const whatsappText = `Salut Razvan, sunt ${name}.${phone ? `\nTelefon: ${phone}` : ''}${message ? `\n\n${message}` : ''}`;
+      const whatsappText = `Salut Razvan, sunt ${name}.${phone ? `\nTelefon: ${phone}` : ''}${business ? `\nAfacere: ${business}` : ''}\n\nAm nevoie de un website profesional.`;
       const whatsappUrl = `https://wa.me/40746614443?text=${encodeURIComponent(whatsappText)}`;
 
       window.open(whatsappUrl, '_blank');
     });
+  }
+
+  // --- Sticky Mobile CTA ---
+  const stickyCta = document.getElementById('sticky-cta');
+  const heroSection = document.getElementById('hero');
+  const contactSection = document.getElementById('contact');
+
+  if (stickyCta && heroSection) {
+    const stickyObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.target === heroSection) {
+          // Show sticky CTA when hero is NOT visible
+          if (!entry.isIntersecting) {
+            stickyCta.classList.add('visible');
+          } else {
+            stickyCta.classList.remove('visible');
+          }
+        }
+      });
+    }, { threshold: 0.1 });
+
+    stickyObserver.observe(heroSection);
+
+    // Hide sticky CTA when contact section is visible
+    if (contactSection) {
+      const contactObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            stickyCta.classList.remove('visible');
+          }
+        });
+      }, { threshold: 0.2 });
+
+      contactObserver.observe(contactSection);
+    }
   }
 
   // --- Active Nav Link on Scroll ---
